@@ -6,17 +6,19 @@ Data ingestion workspace:
   - Automated credential loading (.env)
   - Pipeline trigger (preprocessing → ML → LLM)
   - Stores all results in st.session_state for analytics_page
+  - SQLite-backed history tracking in a sidebar dialog
 """
 
 import os
 import time
+import json
+import sqlite3
 import traceback
-
 import pandas as pd
 import streamlit as st
 
 from backend.apify_fetch import fetch_reviews_from_url
-from backend.auth import persist_analysis
+from backend.auth import persist_analysis, _get_connection 
 from backend.data_preprocessing import apify_to_dataframe, load_csv, preprocess_pipeline
 from backend.llm_fetch import extract_with_llm
 from backend.ml_engine import cluster_reviews, group_by_cluster
@@ -38,15 +40,116 @@ def _init_session_results() -> None:
             st.session_state[k] = v
 
 
+def get_full_analysis_from_db(analysis_id: int) -> dict:
+    """Reconstructs the pipeline_results dict from the database tables."""
+    conn = _get_connection()
+    conn.row_factory = sqlite3.Row
+    
+    # 1. Fetch the primary analytics metadata row
+    meta_row = conn.execute("SELECT * FROM analysis_history WHERE id = ?", (analysis_id,)).fetchone()
+    
+    # 2. Fetch all child extraction complaints mapped to this run
+    complaints_cursor = conn.execute(
+        "SELECT cluster_id, feature_mentioned, sentiment_score, specific_complaint "
+        "FROM extracted_complaints WHERE analysis_id = ?",
+        (analysis_id,)
+    )
+    
+    extractions = []
+    for row in complaints_cursor:
+        extractions.append({
+            "cluster_id": row["cluster_id"],
+            "Feature_Mentioned": row["feature_mentioned"],
+            "Sentiment_Score": row["sentiment_score"],
+            "Specific_Complaint": row["specific_complaint"]
+        })
+        
+    conn.close()
+
+    # Reassemble the dictionary structure required by analytics_page.py
+    return {
+        "source": meta_row["source"],
+        "raw_rows": meta_row["raw_rows"],
+        "filtered_rows": meta_row["filtered_rows"],
+        "capped_rows": meta_row["capped_rows"],
+        "optimal_k": meta_row["k_clusters"],
+        "silhouette": meta_row["silhouette_score"],
+        "engine_used": meta_row["engine_used"],
+        "latency": meta_row["latency_seconds"],
+        "text_conf": 1.0, 
+        "rating_conf": 1.0,
+        "text_col": "Database Reconstructed",
+        "rating_col": "Database Reconstructed",
+        "extractions": extractions
+    }
+
+
+# ─────────────────────────────────────────────────────────────────
+# History Modal Dialog (This hides the table in a popup)
+# ─────────────────────────────────────────────────────────────────
+
+@st.dialog("◈ RECENT ANALYSIS HISTORY", width="large")
+def render_history_dialog(username: str) -> None:
+    """Renders an interactive database table showing past analysis jobs in an overlay."""
+    conn = _get_connection()
+    query = """
+        SELECT id, created_at, source, capped_rows, engine_used 
+        FROM analysis_history 
+        WHERE username = ? 
+        ORDER BY created_at DESC 
+        LIMIT 10
+    """
+    df_hist = pd.read_sql(query, conn, params=(username,))
+    conn.close()
+
+    if df_hist.empty:
+        st.info("No previous processing runs found for this user account.")
+        return
+
+    # Column layout header matching
+    cols = st.columns([1, 2, 2, 2, 2, 2])
+    cols[0].write("**ID**")
+    cols[1].write("**Timestamp**")
+    cols[2].write("**Source**")
+    cols[3].write("**Processed Rows**")
+    cols[4].write("**Engine**")
+    cols[5].write("**Action**")
+
+    st.markdown("---")
+
+    # Render dynamic layout elements with associated state loading actions
+    for _, row in df_hist.iterrows():
+        cols = st.columns([1, 2, 2, 2, 2, 2])
+        cols[0].write(f"#{row['id']}")
+        cols[1].write(row['created_at'].split()[0])
+        cols[2].write(row['source'].upper())
+        cols[3].write(f"{row['capped_rows']} records")
+        
+        engine_color = "#00e5ff" if row['engine_used'] == "LLM" else "#ff9100"
+        cols[4].markdown(f"<span style='color:{engine_color}; font-weight:bold;'>{row['engine_used']}</span>", unsafe_allow_html=True)
+        
+        # This button loads the data AND switches the page
+        if cols[5].button("View Dashboard", key=f"hist_btn_{row['id']}", use_container_width=True):
+            with st.spinner("Reconstructing analytical dataset..."):
+                full_results = get_full_analysis_from_db(row['id'])
+                st.session_state["pipeline_results"] = full_results
+                st.session_state["pipeline_ran"] = True
+            
+            # ---> AUTOMATIC REDIRECT TO ANALYTICS <---
+            st.session_state["navigate_to"] = "Analytics" 
+            st.rerun() 
+
+
+# ─────────────────────────────────────────────────────────────────
+# Pipeline Execution
+# ─────────────────────────────────────────────────────────────────
+
 def _run_full_pipeline(
     df_raw: pd.DataFrame,
     source: str,
     groq_key: str,
 ) -> dict:
-    """
-    Execute the full FlawIntel pipeline and return a results dict.
-    Raises on unrecoverable errors.
-    """
+    """Execute the full FlawIntel pipeline and return a results dict."""
     t_start = time.perf_counter()
 
     # ── Step 1: Preprocess ───────────────────────────────────────
@@ -132,16 +235,22 @@ def render_workspace_page() -> None:
         st.error("Configuration Error: API keys missing from local backend environment (.env). Please configure GROQ_API_KEY and APIFY_TOKEN.")
         st.stop()
 
+    current_user = st.session_state.get('username', 'unknown')
+
+    # ── Sidebar Setup (This puts the history button on the left) ──
+    with st.sidebar:
+        st.markdown("### 🛠️ WORKSPACE TOOLS")
+        if st.button("Watch History", use_container_width=True):
+            render_history_dialog(current_user)
+
     # ── Page header ───────────────────────────────────────────────
     st.markdown(
-        """
-        <div class='fi-zone-title'>◈ DATA INGESTION WORKSPACE</div>
-        """,
+        """<div class='fi-zone-title'>◈ DATA INGESTION WORKSPACE</div>""",
         unsafe_allow_html=True,
     )
 
     st.markdown(
-        f"Logged in as **{st.session_state.get('username', '?')}**. "
+        f"Logged in as **{current_user}**. "
         "Select your target data source to initialize the intelligence pipeline.",
     )
 
@@ -225,14 +334,11 @@ def render_workspace_page() -> None:
                         st.success(f"Fetched **{len(df_tmp):,}** reviews from Apify.")
                         st.dataframe(df_tmp.head(5), use_container_width=True)
                         st.session_state["apify_df"] = df_tmp
-                        
-                        # ---> CRITICAL FIX APPLIED HERE <---
                         df_raw = df_tmp  
                         source = "url"
 
-        # Restore apify df if already fetched (Relaxed State Check)
         if "apify_df" in st.session_state and st.session_state["apify_df"] is not None:
-            if df_raw is None: # ---> CRITICAL FIX APPLIED HERE <---
+            if df_raw is None: 
                 df_raw = st.session_state["apify_df"]
                 source = "url"
 
@@ -241,9 +347,7 @@ def render_workspace_page() -> None:
     # ── Pipeline trigger ─────────────────────────────────────────
     st.markdown("---")
     st.markdown(
-        """
-        <div class='fi-zone-title'>◈ PIPELINE EXECUTION</div>
-        """,
+        """<div class='fi-zone-title'>◈ PIPELINE EXECUTION</div>""",
         unsafe_allow_html=True,
     )
 
@@ -297,8 +401,10 @@ def render_workspace_page() -> None:
                 f"Engine: **{results['engine_used']}** | "
                 f"Clusters: **{results['optimal_k']}**"
             )
-
-            st.info("Navigate to the **Analytics** page to view the full dashboard.")
+            
+            # ---> AUTOMATIC REDIRECT TO ANALYTICS <---
+            st.session_state["navigate_to"] = "Analytics" 
+            st.rerun() 
 
         except ValueError as ve:
             progress.empty()
@@ -310,9 +416,7 @@ def render_workspace_page() -> None:
             err_msg = traceback.format_exc()
             print(err_msg)
             st.session_state["pipeline_error"] = "Unexpected pipeline failure."
-            st.error(
-                "An unexpected error occurred. Check the terminal for the full traceback."
-            )
+            st.error("An unexpected error occurred. Check the terminal for the full traceback.")
 
     # ── Show last run summary if available ───────────────────────
     if st.session_state.get("pipeline_ran") and st.session_state.get("pipeline_results"):
@@ -327,3 +431,5 @@ def render_workspace_page() -> None:
         c2.metric("Filtered", f"{r['filtered_rows']:,}")
         c3.metric("Capped", f"{r['capped_rows']}")
         c4.metric("Clusters k", f"{r['optimal_k']}")
+
+    # NOTE: The render_history_section() call that was previously here has been completely removed!

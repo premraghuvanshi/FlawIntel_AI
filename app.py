@@ -29,7 +29,7 @@ import streamlit as st
 
 # ── Streamlit page config (MUST be first Streamlit call) ─────────
 st.set_page_config(
-    page_title="FlawIntel",
+    page_title="FlawIntel AI",
     page_icon="⬡",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -94,7 +94,7 @@ def _render_nav() -> None:
             <div class="fi-header">
               <span class="fi-logo-glyph">⬡</span>
               <div>
-                <div class="fi-brand-name">FlawIntel</div>
+                <div class="fi-brand-name">FlawIntel AI</div>
                 <div class="fi-brand-sub">Defect Intelligence</div>
               </div>
             </div>
@@ -164,6 +164,16 @@ def _render_nav() -> None:
 def main() -> None:
     _inject_css()
     _init_session()
+
+
+    # Respect automatic navigation requests from other pages (e.g., history dialog)
+    nav_target = st.session_state.get("navigate_to")
+    if nav_target:
+        # Normalize to the same keys used by the router
+        st.session_state["active_page"] = str(nav_target).lower()
+        # Clear the flag so the redirect happens only once
+        del st.session_state["navigate_to"]
+
 
     # Unauthenticated gate
     if not st.session_state.get("authenticated"):
