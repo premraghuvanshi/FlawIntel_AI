@@ -1,4 +1,4 @@
-# ⬡ FlawIntel — Enterprise Defect Intelligence Platform
+# ⬡ FlawIntel AI — Enterprise Defect Intelligence Platform
 
 **FlawIntel** is a production-ready, 3-layer monolithic Streamlit application that ingests negative e-commerce reviews, clusters them with dynamic K-Means, and extracts structured product defect intelligence using the Groq LLM API (with a deterministic heuristic fallback).
 
