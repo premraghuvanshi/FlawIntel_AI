@@ -11,6 +11,7 @@ Full analytics dashboard — 4 zones:
 import traceback
 import pandas as pd
 import streamlit as st
+from frontend.workspace_page import render_history_dialog
 
 # ─────────────────────────────────────────────────────────────────
 # Plotting imports
@@ -257,6 +258,13 @@ def _zone4_tabular_grid(r: dict) -> None:
 # ─────────────────────────────────────────────────────────────────
 def render_analytics_page() -> None:
     """Entry point called by app.py for the analytics dashboard."""
+
+        # Sidebar history button (same behavior as Workspace)
+    with st.sidebar:
+        st.markdown("### 🛠️ WORKSPACE TOOLS")
+        if st.button(" Watch History", use_container_width=True, key="hist_btn_sidebar_analytics"):
+            render_history_dialog(st.session_state.get("username", "unknown"))
+
 
     st.markdown(
         "<div class='fi-zone-title'>◈ ANALYTICS INTELLIGENCE DASHBOARD</div>",
