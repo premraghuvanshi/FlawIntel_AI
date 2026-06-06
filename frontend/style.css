@@ -1,0 +1,395 @@
+/* frontend/style.css — FlawIntel Industrial Dark Theme */
+
+/* ── Google Font import ─────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ── CSS Variables ──────────────────────────────────────────── */
+:root {
+  --bg-primary:     #080c10;
+  --bg-surface:     #0d1117;
+  --bg-card:        #111820;
+  --bg-card-hover:  #161f2a;
+  --bg-input:       #0a0f15;
+
+  --accent-cyan:    #00e5ff;
+  --accent-red:     #ff1744;
+  --accent-amber:   #ffab00;
+  --accent-green:   #00e676;
+  --accent-purple:  #7c4dff;
+
+  --border-dim:     #1e2d3d;
+  --border-active:  #00e5ff44;
+
+  --text-primary:   #e8f0fe;
+  --text-secondary: #8899aa;
+  --text-muted:     #445566;
+  --text-mono:      #00e5ff;
+
+  --glow-cyan:      0 0 12px #00e5ff55, 0 0 24px #00e5ff22;
+  --glow-red:       0 0 12px #ff174455, 0 0 24px #ff174422;
+
+  --radius-sm:      4px;
+  --radius-md:      8px;
+  --radius-lg:      12px;
+
+  --transition:     0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Global reset ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, [data-testid="stAppViewContainer"],
+[data-testid="stApp"] {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  font-family: 'Inter', 'Segoe UI', sans-serif !important;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+[data-testid="stSidebar"] {
+  background-color: var(--bg-surface) !important;
+  border-right: 1px solid var(--border-dim) !important;
+}
+
+[data-testid="stSidebar"] * {
+  color: var(--text-primary) !important;
+}
+
+/* ── Top header strip ───────────────────────────────────────── */
+.fi-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid var(--border-dim);
+  margin-bottom: 24px;
+  background: linear-gradient(90deg, #080c10 0%, #0d1a26 100%);
+}
+
+.fi-logo-glyph {
+  font-size: 28px;
+  filter: drop-shadow(var(--glow-cyan));
+}
+
+.fi-brand-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: 3px;
+  color: var(--accent-cyan) !important;
+  text-shadow: var(--glow-cyan);
+  text-transform: uppercase;
+}
+
+.fi-brand-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: -4px;
+}
+
+/* ── Zone / section cards ───────────────────────────────────── */
+.fi-zone {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  transition: border-color var(--transition);
+}
+
+.fi-zone:hover {
+  border-color: var(--border-active);
+}
+
+.fi-zone-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--accent-cyan);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fi-zone-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background: var(--accent-cyan);
+  border-radius: 2px;
+  box-shadow: var(--glow-cyan);
+}
+
+/* ── Metric pills ───────────────────────────────────────────── */
+.fi-metric-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.fi-metric {
+  flex: 1;
+  min-width: 120px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.fi-metric-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.fi-metric-value {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 22px;
+  color: var(--accent-cyan);
+  text-shadow: var(--glow-cyan);
+}
+
+/* ── Status badges ──────────────────────────────────────────── */
+.fi-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.fi-badge-llm {
+  background: #00e67622;
+  border: 1px solid var(--accent-green);
+  color: var(--accent-green);
+}
+
+.fi-badge-heuristic {
+  background: #ffab0022;
+  border: 1px solid var(--accent-amber);
+  color: var(--accent-amber);
+}
+
+.fi-badge-error {
+  background: #ff174422;
+  border: 1px solid var(--accent-red);
+  color: var(--accent-red);
+}
+
+/* ── Auth page ──────────────────────────────────────────────── */
+.fi-auth-container {
+  max-width: 420px;
+  margin: 60px auto;
+  padding: 36px 40px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 40px #00000088;
+}
+
+.fi-auth-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  letter-spacing: 4px;
+  color: var(--accent-cyan);
+  text-shadow: var(--glow-cyan);
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.fi-auth-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 28px;
+}
+
+/* ── Streamlit overrides ────────────────────────────────────── */
+
+/* Inputs */
+[data-testid="stTextInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-testid="stSelectbox"] select {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-dim) !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+[data-testid="stTextInput"] input:focus,
+[data-testid="stTextArea"] textarea:focus {
+  border-color: var(--accent-cyan) !important;
+  box-shadow: var(--glow-cyan) !important;
+  outline: none !important;
+}
+
+/* Buttons */
+[data-testid="stButton"] button {
+  background: linear-gradient(135deg, #00c4db 0%, #0088a8 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  padding: 8px 24px !important;
+  transition: all var(--transition) !important;
+  box-shadow: 0 0 12px #00e5ff33 !important;
+}
+
+[data-testid="stButton"] button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 20px #00e5ff55 !important;
+}
+
+/* File uploader */
+[data-testid="stFileUploader"] {
+  background: var(--bg-card) !important;
+  border: 1px dashed var(--border-dim) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 16px !important;
+}
+
+/* Dataframe */
+[data-testid="stDataFrame"] {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-dim) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden !important;
+}
+
+/* Tabs */
+[data-testid="stTabs"] [data-testid="stTab"] {
+  font-family: 'Share Tech Mono', monospace !important;
+  letter-spacing: 1px !important;
+  color: var(--text-secondary) !important;
+}
+
+[data-testid="stTabs"] [aria-selected="true"] {
+  color: var(--accent-cyan) !important;
+  border-bottom-color: var(--accent-cyan) !important;
+}
+
+/* Metrics */
+[data-testid="stMetric"] {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-dim) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 12px 16px !important;
+}
+
+[data-testid="stMetricLabel"] {
+  font-family: 'Share Tech Mono', monospace !important;
+  font-size: 10px !important;
+  letter-spacing: 2px !important;
+  color: var(--text-muted) !important;
+}
+
+[data-testid="stMetricValue"] {
+  color: var(--accent-cyan) !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  font-size: 28px !important;
+}
+
+/* Alerts */
+[data-testid="stAlert"] {
+  border-radius: var(--radius-md) !important;
+  border-left-width: 3px !important;
+}
+
+/* Divider */
+hr {
+  border-color: var(--border-dim) !important;
+  margin: 20px 0 !important;
+}
+
+/* Spinner */
+[data-testid="stSpinner"] {
+  color: var(--accent-cyan) !important;
+}
+
+/* Chart backgrounds */
+.js-plotly-plot .plotly .main-svg {
+  background: transparent !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--border-dim); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
+
+/* ── Funnel / pipeline visual ───────────────────────────────── */
+.fi-funnel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.fi-funnel-step {
+  height: 38px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  transition: width var(--transition);
+}
+
+/* ── Progress / confidence bars ─────────────────────────────── */
+.fi-confidence-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.fi-confidence-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 120px;
+  letter-spacing: 1px;
+}
+
+.fi-confidence-track {
+  flex: 1;
+  height: 6px;
+  background: var(--border-dim);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.fi-confidence-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+  box-shadow: var(--glow-cyan);
+  transition: width 0.6s ease;
+}
+
+.fi-confidence-pct {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: var(--accent-cyan);
+  min-width: 40px;
+  text-align: right;
+}

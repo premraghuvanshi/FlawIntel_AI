@@ -1,0 +1,101 @@
+Review_ID,Review_Date,Product_Model,Rating,Review_Title,Review_Text,Verified_Purchase
+REV_001,2026-05-01,Quantum X,1,Terrible Battery Life,"The battery drains from 100 to 0 in under 4 hours. Completely unusable for a full workday.",True
+REV_002,2026-05-02,Quantum X,2,Overheats quickly,"Phone gets dangerously hot near the camera module when playing simple games.",True
+REV_003,2026-05-03,Quantum X,3,Camera won't focus,"The macro lens is a gimmick and the main lens struggles to auto-focus in low light.",False
+REV_004,2026-05-04,Quantum X,2,Screen burn-in,"After just two weeks I can already see a ghost image of the status bar burned into the OLED.",True
+REV_005,2026-05-05,Quantum X,1,Massive lag,"Swiping between home screens stutters constantly. The UI is poorly optimized.",True
+REV_006,2026-05-06,Quantum X,5,Amazing performance,"Fastest phone I have ever used. Everything loads instantly.",True
+REV_007,2026-05-07,Quantum X,4,Great camera,"Daylight photos are crisp and vibrant. Highly recommend for photography.",True
+REV_008,2026-05-08,Quantum X,5,Beautiful screen,"The 120Hz refresh rate makes scrolling incredibly smooth.",True
+REV_009,2026-05-09,Quantum X,3,Too heavy,"Good specs but the device feels like a brick in my pocket. Uncomfortable to hold.",True
+REV_010,2026-05-10,Quantum X,4,Good value,"For the price you get a lot of features. Missing wireless charging though.",False
+REV_011,2026-05-11,Quantum X,,Battery is a joke,"I have to charge it twice a day. The standby drain is horrendous.",True
+REV_012,2026-05-12,Quantum X,2,Gets too hot,"Watching a 10 minute YouTube video makes the back panel uncomfortably warm.",True
+REV_013,2026-05-13,Quantum X,2,Blurry photos,"Portrait mode edge detection is awful. It blurs my hair and ears every time.",True
+REV_014,2026-05-14,Quantum X,3,Dead pixels,"Noticed two dead pixels on the bottom right corner out of the box.",True
+REV_015,2026-05-15,Quantum X,2,App crashes,"Instagram and WhatsApp crash randomly. The RAM management kills background apps too aggressively.",True
+REV_016,2026-05-16,Quantum X,5,Battery beast,,True
+REV_017,2026-05-17,Quantum X,4,Sleek design,"Looks very premium. The matte finish rejects fingerprints well.",True
+REV_018,2026-05-18,Quantum X,5,Loud speakers,"The stereo speakers are incredibly loud and clear without distortion.",True
+REV_019,2026-05-19,Quantum X,,Slippery,"You absolutely need a case. It slid right off my desk.",False
+REV_020,2026-05-20,Quantum X,4,Decent buy,"Solid mid-range phone. Does everything I need it to do.",True
+REV_021,2026-05-21,Quantum X,1,Dies at 15%,"Phone shuts down randomly when it hits 15 percent battery. Faulty hardware.",True
+REV_022,2026-05-22,Quantum X,2,Thermal throttling,"Frame rates drop significantly after 5 minutes of gaming due to excessive heat.",True
+REV_023,2026-05-23,Quantum X,3,Shutter lag,"Takes almost a full second to capture an image after pressing the button. Missed many shots.",True
+REV_024,2026-05-24,Quantum X,2,Green tint on screen,"At low brightness the entire display has a noticeable and ugly green tint.",True
+REV_025,2026-05-25,Quantum X,1,Bloatware everywhere,"Comes pre-installed with 20 garbage apps that you cannot uninstall. Infuriating.",True
+REV_026,2026-05-26,Quantum X,5,Flawless software,"No ads no bloatware. The interface is clean and snappy.",True
+REV_027,2026-05-27,Quantum X,4,Fast charging,"Goes from 0 to 100 in just 30 minutes. Very convenient.",True
+REV_028,2026-05-28,Quantum X,5,Perfect size,"Fits nicely in one hand unlike the giant max versions.",True
+REV_029,2026-05-29,Quantum X,3,No headphone jack,"Annoyed that I have to buy dongles now. Otherwise fine.",True
+REV_030,2026-05-30,Quantum X,4,Reliable,"Good signal strength and call quality. No dropped calls.",True
+REV_031,2026-06-01,Quantum X,1,Charging issue,"Phone only charges when the cable is held at a specific angle. Port is loose.",True
+REV_032,2026-06-02,Quantum X,2,Overheating warning,"Keeps throwing a high temperature warning and turning off the flashlight.",True
+REV_033,2026-06-03,Quantum X,3,Video stabilization fails,"4K video recording is incredibly shaky. OIS does not seem to work at all.",False
+REV_034,2026-06-04,Quantum X,2,Touch sensitivity,,True
+REV_035,2026-06-05,Quantum X,1,Fingerprint scanner broken,"The under-display reader works maybe 1 out of 10 times. Total garbage.",True
+REV_036,2026-06-06,Quantum X,5,Great fingerprint sensor,"Unlocks instantly. Best biometric scanner I have used.",True
+REV_037,2026-06-07,Quantum X,4,Vibrant colors,"Watching HDR content on Netflix looks breathtaking.",True
+REV_038,2026-06-08,Quantum X,,Sturdy build,"Dropped it on concrete and it barely got a scratch. Very durable.",True
+REV_039,2026-06-09,Quantum X,3,Fingerprint magnet,"The glossy back gets dirty immediately. Needs constant wiping.",True
+REV_040,2026-06-10,Quantum X,4,Fluid animations,"Menu transitions are very Apple-esque. Extremely smooth.",True
+REV_041,2026-06-11,Quantum X,1,Awful battery optimization,"Even with power saving mode on the battery drains fast. Software bug.",True
+REV_042,2026-06-12,Quantum X,2,Gets hot on calls,"Just making a regular voice call makes the earpiece area uncomfortably hot.",True
+REV_043,2026-06-13,Quantum X,3,Washed out photos,"Indoor lighting makes pictures look pale and lack contrast.",True
+REV_044,2026-06-14,Quantum X,2,Black smear,"Scrolling text on a black background leaves terrible purple smearing trails.",True
+REV_045,2026-06-15,Quantum X,1,Wifi drops,"Randomly disconnects from my home 5Ghz wifi network several times a day.",True
+REV_046,2026-06-16,Quantum X,5,Strong connection,"Gets 5G signal in areas where my old phone had zero bars.",True
+REV_047,2026-06-17,Quantum X,4,Crisp audio,"Bluetooth codec support is great. My wireless earbuds sound amazing.",True
+REV_048,2026-06-18,Quantum X,5,Highly recommended,"Best phone of the year. Unbeatable price to performance ratio.",True
+REV_049,2026-06-19,Quantum X,3,Camera bump,"The camera module sticks out too far. The phone wobbles flat on a table.",False
+REV_050,2026-06-20,Quantum X,4,Good update policy,"Received two major OS updates already. They support it well.",True
+REV_051,2026-06-21,Quantum X,1,Battery health degraded,"Battery max capacity dropped to 85 percent after just 3 months.",True
+REV_052,2026-06-22,Quantum X,2,Burns my hand,"Charging the device makes the metal frame so hot it literally burns to touch.",True
+REV_053,2026-06-23,Quantum X,3,Selfie camera sucks,"The front facing camera over-smooths my face like a cheap beauty filter.",True
+REV_054,2026-06-24,Quantum X,,Screen flickering,"At 30 percent brightness the screen flickers visibly. Gives me a headache.",True
+REV_055,2026-06-25,Quantum X,1,Bluetooth stutters,"Audio constantly cuts in and out when connected to my car stereo.",True
+REV_056,2026-06-26,Quantum X,5,Flawless bluetooth,"Pairs instantly with my watch and car. Zero dropouts.",True
+REV_057,2026-06-27,Quantum X,4,Bright outdoors,"Can easily read text in direct summer sunlight. Display gets very bright.",True
+REV_058,2026-06-28,Quantum X,5,Great haptics,"The vibration motor feels premium. Typing is very satisfying.",True
+REV_059,2026-06-29,Quantum X,3,Weak vibration,"I miss calls because the vibration is too weak to feel in my pocket.",True
+REV_060,2026-06-30,Quantum X,4,Nice UI,"Customization options are deep and useful. Love the theme engine.",True
+REV_061,2026-07-01,Quantum X,1,Drains idle,"Loses 20 percent battery overnight while doing absolutely nothing.",True
+REV_062,2026-07-02,Quantum X,2,Heat kills battery,"Because it runs so hot the battery efficiency is ruined.",True
+REV_063,2026-07-03,Quantum X,3,Lens flare,"Taking pictures near streetlights results in terrible lens flares and artifacts.",True
+REV_064,2026-07-04,Quantum X,2,Color shift,"Viewing the screen from a slight angle causes the colors to wash out completely.",True
+REV_065,2026-07-05,Quantum X,1,Proximity sensor fails,"My cheek constantly mutes calls because the proximity sensor does not turn off the screen.",True
+REV_066,2026-07-06,Quantum X,5,Works perfectly,"Everything functions exactly as advertised. No complaints at all.",True
+REV_067,2026-07-07,Quantum X,4,Great multitasking,"12GB of RAM means apps never reload. Seamless switching.",True
+REV_068,2026-07-08,Quantum X,5,Premium unboxing,"The packaging was great and it came with a fast charger in the box.",True
+REV_069,2026-07-09,Quantum X,,No charger included,"Docking points because they did not include a charging brick.",True
+REV_070,2026-07-10,Quantum X,4,Clean design,"Minimalist and professional. Does not look like a toy.",True
+REV_071,2026-07-11,Quantum X,1,Swollen battery,"After 6 months the battery swelled up and popped the back glass off.",True
+REV_072,2026-07-12,Quantum X,2,Hotspot overheats,"Turning on mobile hotspot shuts the phone down within 15 minutes due to heat.",True
+REV_073,2026-07-13,Quantum X,3,Night mode is bad,"Night mode takes 5 seconds to process and the result is a noisy mess.",False
+REV_074,2026-07-14,Quantum X,2,Ghost touches,"The screen randomly registers taps when I am not touching it. Frustrating.",True
+REV_075,2026-07-15,Quantum X,1,GPS inaccurate,"Google Maps constantly loses my location. Hardware defect.",True
+REV_076,2026-07-16,Quantum X,5,Pinpoint GPS,"Navigation is flawless even in dense city streets with tall buildings.",True
+REV_077,2026-07-17,Quantum X,4,Smooth 120hz,"Once you use this display you cannot go back to 60hz.",True
+REV_078,2026-07-18,Quantum X,5,Amazing gift,,True
+REV_079,2026-07-19,Quantum X,3,Weird aspect ratio,"Some older apps do not scale correctly and leave black bars on the sides.",True
+REV_080,2026-07-20,Quantum X,4,Good camera app,"The pro mode controls are very intuitive for manual photography.",True
+REV_081,2026-07-21,Quantum X,1,Slow charging,"Despite the claims it takes over 2 hours to fully charge.",True
+REV_082,2026-07-22,Quantum X,2,Processor gets hot,"The Snapdragon chip in this model is notoriously bad at heat management.",True
+REV_083,2026-07-23,Quantum X,3,Overexposed sky,"Camera tends to completely blow out the highlights in bright outdoor scenes.",True
+REV_084,2026-07-24,Quantum X,2,Auto brightness fails,"The auto brightness constantly adjusts for no reason in a dark room.",True
+REV_085,2026-07-25,Quantum X,1,Keyboard lag,"There is a noticeable delay when typing quickly on the stock keyboard.",True
+REV_086,2026-07-26,Quantum X,5,Zero lag,"Handles Genshin Impact on highest settings without dropping a frame.",True
+REV_087,2026-07-27,Quantum X,4,Great ecosystem,"Pairs wonderfully with the brand's wireless earbuds and smartwatch.",True
+REV_088,2026-07-28,Quantum X,5,Super tough,"Fell out of my pocket while biking and survived with just a dent.",True
+REV_089,2026-07-29,Quantum X,3,Paint chipping,"The black paint around the charging port started chipping after a week.",True
+REV_090,2026-07-30,Quantum X,4,Good microphones,"Voice recording for videos is exceptionally clear.",True
+REV_091,2026-08-01,Quantum X,1,Poor battery optimization,"Recent software update ruined the battery. Please fix this.",True
+REV_092,2026-08-02,Quantum X,2,Dangerous heat,"Left it in the sun for 2 minutes and it got too hot to safely hold.",True
+REV_093,2026-08-03,Quantum X,3,No ultrawide,"Missed opportunity not including an ultrawide lens on a modern device.",True
+REV_094,2026-08-04,Quantum X,2,Scratches easily,"The protective glass is soft. Keys in my pocket scratched it on day one.",True
+REV_095,2026-08-05,Quantum X,1,Volume buttons stuck,"The volume rocker got permanently stuck pressing down after minor use.",True
+REV_096,2026-08-06,Quantum X,5,Clicky buttons,"Physical buttons have great tactile feedback.",True
+REV_097,2026-08-07,Quantum X,4,Waterproof,"Dropped it in the sink and it survived without any issues.",True
+REV_098,2026-08-08,Quantum X,,Love it,"Simply the best piece of tech I purchased this year.",True
+REV_099,2026-08-09,Quantum X,3,Too big,,False
+REV_100,2026-08-10,Quantum X,4,Solid phone,"Meets all expectations. Good job.",True
