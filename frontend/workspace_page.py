@@ -240,7 +240,7 @@ def render_workspace_page() -> None:
     # ── Sidebar Setup (This puts the history button on the left) ──
     with st.sidebar:
         st.markdown("### 🛠️ WORKSPACE TOOLS")
-        if st.button("Watch History", use_container_width=True):
+        if st.button("Watch History", width="stretch"):
             render_history_dialog(current_user)
 
     # ── Page header ───────────────────────────────────────────────
@@ -358,14 +358,14 @@ def render_workspace_page() -> None:
             "⬡ EXECUTE FLAWINTEL PIPELINE",
             key="run_pipeline_btn",
             disabled=(df_raw is None),
-            use_container_width=True,
+            width="stretch",
         )
 
     with col_reset:
         reset_btn = st.button(
             "↺ RESET",
             key="reset_btn",
-            use_container_width=True,
+            width="stretch",
         )
 
     if reset_btn:

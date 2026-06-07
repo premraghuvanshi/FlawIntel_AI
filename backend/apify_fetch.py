@@ -1,13 +1,18 @@
 """
 backend/apify_fetch.py
 ──────────────────────────────────────────────────────────────────
-Live e-commerce review scraping via Apify cloud actors.
-Supports Amazon and generic review URLs.
-Returns a raw list of dicts that data_preprocessing.py normalises.
+Industrial-grade e-commerce review scraping module using Apify.
+
+Responsibilities:
+  1. Detect Target Platform: Identifies the e-commerce domain from the URL.
+  2. Payload Construction: Builds platform-specific JSON configurations 
+     (enforcing negative reviews, recent sorting, and privacy filters).
+  3. API Orchestration: Manages the synchronous execution of Apify actors.
+  4. Data Normalisation: Translates varied JSON responses into a uniform schema.
 """
 
 import traceback
-from typing import Any
+from typing import Any, Tuple, List
 
 try:
     from apify_client import ApifyClient
@@ -15,116 +20,207 @@ except ImportError:
     ApifyClient = None  # type: ignore[assignment]
 
 
-# ── Actor IDs for popular review scrapers on the Apify marketplace ──
+# ─────────────────────────────────────────────────────────────────
+# 1. CONFIGURATION & CONSTANTS
+# ─────────────────────────────────────────────────────────────────
+
+# Target fetch limit. We request slightly more to ensure ~70 survive filtering
+_TARGET_FETCH_LIMIT = 100 
+
+# Map internal platform names to established Apify Actors
 _ACTOR_MAP = {
     "amazon": "junglee/amazon-reviews-scraper",
+    "flipkart": "epctex/flipkart-reviews-scraper",
+    "playstore": "epctex/google-play-scraper",
+    "myntra": "dtrush/myntra-scraper",
     "generic": "apify/website-content-crawler",
 }
 
-# Maximum items to pull from Apify per run (buffer before the 80-row cap)
-_APIFY_MAX_ITEMS = 200
 
+# ─────────────────────────────────────────────────────────────────
+# 2. PLATFORM DETECTION & ROUTING
+# ─────────────────────────────────────────────────────────────────
 
-def _detect_actor(url: str) -> str:
-    """Choose the best actor based on the domain in the URL."""
-    lowered = url.lower()
-    if "amazon." in lowered:
-        return _ACTOR_MAP["amazon"]
-    return _ACTOR_MAP["generic"]
-
-
-def _normalise_item(item: dict[str, Any], actor: str) -> dict[str, Any]:
+def _detect_platform(url: str) -> str:
     """
-    Translate actor-specific field names into a uniform shape:
-      { "review_text": str, "star_rating": float | None, ... raw fields ... }
+    Analyzes the URL domain to route the request to the correct Apify actor.
     """
-    normalised = dict(item)  # keep all raw fields for the AI column mapper
+    lowered_url = url.lower()
+    
+    if "amazon." in lowered_url:
+        return "amazon"
+    elif "flipkart." in lowered_url:
+        return "flipkart"
+    elif "play.google.com" in lowered_url:
+        return "playstore"
+    elif "myntra." in lowered_url:
+        return "myntra"
+    
+    return "generic"
 
-    if "amazon" in actor:
-        # junglee/amazon-reviews-scraper field names
-        normalised.setdefault("review_text", item.get("text", item.get("reviewText", "")))
-        raw_rating = item.get("rating", item.get("starRating", None))
+
+def _build_actor_payload(platform: str, url: str) -> dict:
+    """
+    Constructs the specific JSON payload required for the chosen platform's Actor.
+    Enforces strict rules: Recent sort, negative ratings (1-3), and minimal metadata.
+    """
+    
+    if platform == "amazon":
+        return {
+            "productUrls": [{"url": url}],
+            "maxReviews": _TARGET_FETCH_LIMIT,
+            "reviewsSort": "recent",
+            "filterByStar": ["one_star", "two_star", "three_star"],
+            "scrapeReviewerProfile": False, # Privacy / Speed
+            "extractImages": False,
+            "includeHtml": False
+        }
+        
+    elif platform == "flipkart":
+        return {
+            "startUrls": [{"url": url}],
+            "maxItems": _TARGET_FETCH_LIMIT,
+            "sort": "mostRecent", 
+            "rating": [1, 2, 3], 
+            "includeHtml": False
+        }
+        
+    elif platform == "playstore":
+        return {
+            "startUrls": [{"url": url}],
+            "maxReviews": _TARGET_FETCH_LIMIT,
+            "sort": "NEWEST", 
+            "stars": [1, 2, 3],
+        }
+        
+    elif platform == "myntra":
+         return {
+            "startUrls": [{"url": url}],
+            "maxItems": _TARGET_FETCH_LIMIT,
+        }
+         
+    # Fallback for Generic Crawler
+    return {
+        "startUrls": [{"url": url}],
+        "maxCrawlPages": 5,
+        "crawlerType": "cheerio",
+    }
+
+
+# ─────────────────────────────────────────────────────────────────
+# 3. DATA NORMALISATION PIPELINE
+# ─────────────────────────────────────────────────────────────────
+
+def _normalise_item(item: dict[str, Any], platform: str) -> dict[str, Any]:
+    """
+    Translates wild JSON field names from different actors into a uniform schema.
+    Guarantees 'review_text' and 'star_rating' exist for downstream ML tasks.
+    """
+    normalised = dict(item)  # Preserve all raw fields for safety/inspection
+
+    # -- Map Text Fields --
+    if platform == "amazon":
+        normalised["review_text"] = item.get("text", item.get("reviewText", ""))
+    elif platform == "flipkart":
+        normalised["review_text"] = item.get("reviewDescription", item.get("text", ""))
+    elif platform == "playstore":
+        normalised["review_text"] = item.get("text", item.get("content", ""))
     else:
-        # apify/website-content-crawler is generic; no guaranteed review fields
-        normalised.setdefault("review_text", item.get("text", item.get("content", "")))
-        raw_rating = item.get("rating", None)
+        normalised["review_text"] = item.get("text", item.get("content", ""))
 
-    # Coerce rating to float or None
+    # -- Map Rating Fields --
+    raw_rating = None
+    if platform == "amazon":
+        raw_rating = item.get("rating", item.get("starRating", None))
+    elif platform == "flipkart":
+         raw_rating = item.get("ratingScore", item.get("rating", None))
+    elif platform == "playstore":
+         raw_rating = item.get("score", item.get("rating", None))
+    else:
+         raw_rating = item.get("rating", None)
+
+    # -- Strict Type Coercion for Ratings --
     try:
-        normalised["star_rating"] = float(str(raw_rating).split()[0]) if raw_rating is not None else None
-    except (ValueError, AttributeError):
+        if raw_rating is not None:
+            # Handles string formats like "3.5 out of 5 stars" -> 3.5
+            normalised["star_rating"] = float(str(raw_rating).split()[0])
+        else:
+            normalised["star_rating"] = None
+    except (ValueError, AttributeError, IndexError):
         normalised["star_rating"] = None
 
     return normalised
 
 
-def fetch_reviews_from_url(url: str, apify_token: str) -> tuple[list[dict], str]:
-    """
-    Scrape reviews from a given e-commerce URL using Apify.
+# ─────────────────────────────────────────────────────────────────
+# 4. MAIN EXECUTION ORCHESTRATOR
+# ─────────────────────────────────────────────────────────────────
 
-    Parameters
-    ----------
-    url : str
-        The product / review page URL.
-    apify_token : str
-        Apify API token supplied by the user at runtime.
-
-    Returns
-    -------
-    (items, error_message)
-        items        – list of normalised dicts (empty on failure)
-        error_message – empty string on success, descriptive string on failure
+def fetch_reviews_from_url(url: str, apify_token: str) -> Tuple[List[dict], str]:
     """
+    Executes the full Apify extraction pipeline.
+    
+    Returns:
+        (items, error_message): A tuple containing the list of normalised dictionaries 
+                                and an error string (empty if successful).
+    """
+    # -- 1. Pre-flight Checks --
     if ApifyClient is None:
-        return [], "apify-client package is not installed."
+        return [], "System Error: 'apify-client' package is not installed."
 
     if not apify_token or not apify_token.strip():
-        return [], "Apify API token is required for URL-based ingestion."
+        return [], "Authentication Error: Apify API token is missing."
 
     if not url or not url.strip().startswith("http"):
-        return [], f"Invalid URL: '{url}'. Must start with http/https."
+        return [], f"Validation Error: Invalid URL '{url}'. Must include http/https."
 
-    actor_id = _detect_actor(url)
+    # -- 2. Routing & Payload Prep --
+    platform = _detect_platform(url)
+    actor_id = _ACTOR_MAP[platform]
+    run_input = _build_actor_payload(platform, url)
 
+    print(f"[API_FETCH] Initiating extraction pipeline for: {platform.upper()}")
+    print(f"[API_FETCH] Target URL: {url}")
+    print(f"[API_FETCH] Assigned Actor: {actor_id}")
+
+    # -- 3. Apify API Execution --
     try:
         client = ApifyClient(apify_token.strip())
 
-        # Build run input based on actor type
-        if "amazon" in actor_id:
-            run_input = {
-                "productUrls": [{"url": url}],
-                "maxReviews": _APIFY_MAX_ITEMS,
-                "reviewsSort": "recent",
-            }
-        else:
-            run_input = {
-                "startUrls": [{"url": url}],
-                "maxCrawlPages": 5,
-                "crawlerType": "cheerio",
-            }
-
-        print(f"[apify_fetch] Starting actor '{actor_id}' for URL: {url}")
+        # Call the actor synchronously (blocks until the run is finished)
         run = client.actor(actor_id).call(run_input=run_input)
 
+        # -- 4. Response Validation --
         if run is None or run.get("status") not in ("SUCCEEDED", "FINISHED"):
             status = run.get("status") if run else "NO_RESPONSE"
-            return [], f"Apify actor finished with status: {status}."
+            return [], f"Actor Failure: Apify process terminated with status '{status}'."
 
         dataset_id = run.get("defaultDatasetId")
         if not dataset_id:
-            return [], "Apify run succeeded but returned no dataset ID."
+            return [], "Extraction Error: Run succeeded but no dataset was generated."
 
+        # -- 5. Data Retrieval & Normalisation --
         raw_items = list(
-            client.dataset(dataset_id).iterate_items(limit=_APIFY_MAX_ITEMS)
+            client.dataset(dataset_id).iterate_items(limit=_TARGET_FETCH_LIMIT)
         )
 
         if not raw_items:
-            return [], "Apify returned an empty dataset. The URL may not contain review data."
+            return [], "Empty Result: The scraper completed but found 0 matching reviews. Try a different URL or relax filtering."
 
-        normalised = [_normalise_item(item, actor_id) for item in raw_items]
-        print(f"[apify_fetch] Retrieved {len(normalised)} items from Apify.")
-        return normalised, ""
+        normalised_items = [_normalise_item(item, platform) for item in raw_items]
+        
+        print(f"[API_FETCH] Success: Retrieved and normalised {len(normalised_items)} records.")
+        return normalised_items, ""
 
-    except Exception:
+    # -- 6. Exception Handling --
+    except Exception as e:
+        print("[API_FETCH] Critical Pipeline Failure:")
         traceback.print_exc()
-        return [], "Apify fetch failed. Check token validity and URL accessibility."
+        
+        # Determine if it's an auth error vs a timeout/network error
+        if "401" in str(e) or "unauthorized" in str(e).lower():
+            return [], "Authentication Error: Your Apify API key was rejected."
+        elif "400" in str(e):
+            return [], "Payload Error: The specific Apify actor rejected the configuration parameters."
+            
+        return [], "Network Error: Apify fetch failed unexpectedly. Check the console logs."

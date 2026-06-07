@@ -4,10 +4,11 @@ backend/data_preprocessing.py
 Handles:
   1. CSV upload → DataFrame
   2. Apify JSON list → DataFrame
-  3. AI Column Mapper  – uses all-MiniLM-L6-v2 + cosine similarity
+  3. Aggressive Column Cleaning – drops nulls, spaces, and constant values
+  4. AI Column Mapper  – uses all-MiniLM-L6-v2 + cosine similarity
                          to identify 'text' and 'rating' columns
-  4. Rating filter     – keep rows where rating <= 3
-  5. Hard cap          – truncate to exactly 80 rows
+  5. Rating filter     – keep rows where rating <= 3
+  6. Hard cap          – truncate to exactly 80 rows
 """
 
 import traceback
@@ -47,7 +48,7 @@ def _cosine_similarity_1d(a: np.ndarray, b: np.ndarray) -> float:
 # ─────────────────────────────────────────────────────────────────
 
 # Target concept strings used as semantic anchors
-_TEXT_CONCEPT = "written customer review opinion feedback comment"
+_TEXT_CONCEPT = "written customer review opinion feedback comment text description"
 _RATING_CONCEPT = "numeric star rating score grade evaluation"
 
 # Minimum confidence to accept a column mapping
@@ -59,14 +60,6 @@ def map_columns(df: pd.DataFrame) -> tuple[str | None, str | None, float, float]
     """
     Use MiniLM embeddings + cosine similarity to identify which
     column in *df* corresponds to review text and which to rating.
-
-    Returns
-    -------
-    (text_col, rating_col, text_conf, rating_conf)
-        text_col    – column name or None if not found
-        rating_col  – column name or None if not found
-        text_conf   – cosine similarity score for text column  (0-1)
-        rating_conf – cosine similarity score for rating column (0-1)
     """
     columns = list(df.columns)
     if not columns:
@@ -119,11 +112,7 @@ def map_columns(df: pd.DataFrame) -> tuple[str | None, str | None, float, float]
 # ─────────────────────────────────────────────────────────────────
 
 def load_csv(file_obj) -> tuple[pd.DataFrame, str]:
-    """
-    Read a CSV upload (Streamlit UploadedFile or file-like) into a DataFrame.
-
-    Returns (df, error_message). df is empty on failure.
-    """
+    """Read a CSV upload into a DataFrame."""
     try:
         df = pd.read_csv(file_obj, encoding="utf-8", on_bad_lines="skip")
         df.columns = [str(c).strip() for c in df.columns]
@@ -150,11 +139,7 @@ def load_csv(file_obj) -> tuple[pd.DataFrame, str]:
 # ─────────────────────────────────────────────────────────────────
 
 def apify_to_dataframe(items: list[dict[str, Any]]) -> tuple[pd.DataFrame, str]:
-    """
-    Convert the raw list of dicts from apify_fetch into a DataFrame.
-
-    Returns (df, error_message).
-    """
+    """Convert the raw list of dicts from apify_fetch into a DataFrame."""
     if not items:
         return pd.DataFrame(), "Apify returned no items to convert."
     try:
@@ -178,22 +163,34 @@ def preprocess_pipeline(
     df: pd.DataFrame,
 ) -> tuple[pd.DataFrame, str, str, int, int, int, float, float]:
     """
-    Full preprocessing pipeline:
-      1. AI column mapping
-      2. Coerce rating column to numeric
-      3. Filter: keep rating <= 3
-      4. Drop rows with empty text
-      5. Hard cap to 80 rows
-
-    Returns
-    -------
-    (processed_df, text_col, rating_col,
-     raw_rows, filtered_rows, capped_rows,
-     text_conf, rating_conf)
-
-    Raises ValueError if a critical step cannot complete.
+    Full preprocessing pipeline.
     """
     raw_rows = len(df)
+    
+   # ── Step 0: Aggressive Data Cleaning ─────────────────────────
+    cols_before = set(df.columns)
+    
+    # A. Convert pure whitespace strings (e.g., "   ") to proper NaN
+    df = df.replace(r'^\s*$', np.nan, regex=True)
+    
+    # B. Convert literal string representations of nulls to proper NaN (case-insensitive)
+    df = df.replace(to_replace=r'(?i)^(nan|none|null)$', value=np.nan, regex=True)
+    
+    # C. Drop columns that are entirely NaN/None
+    df = df.dropna(axis=1, how='all')
+    
+    # D. Drop columns with exactly 1 unique value across all rows (zero variance)
+    # FIX: We convert everything to strings just for the uniqueness check 
+    # to avoid the "unhashable type: list" crash on columns like 'reviewImages'.
+    nunique = df.astype(str).nunique(dropna=True)
+    constant_cols = nunique[nunique <= 1].index
+    df = df.drop(columns=constant_cols)
+    
+    cols_after = set(df.columns)
+    dropped_cols = cols_before - cols_after
+    
+    if dropped_cols:
+        print(f"[pipeline] Dropped {len(dropped_cols)} useless columns: {dropped_cols}")
 
     # ── Step 1: AI column mapping ────────────────────────────────
     text_col, rating_col, text_conf, rating_conf = map_columns(df)
@@ -201,7 +198,7 @@ def preprocess_pipeline(
     if text_col is None:
         raise ValueError(
             "AI Column Mapper could not identify a review-text column. "
-            "Ensure the CSV contains a text/comment/review column."
+            "Ensure the dataset contains a text/comment/review column."
         )
 
     # ── Step 2: Coerce rating to numeric ─────────────────────────
@@ -224,8 +221,8 @@ def preprocess_pipeline(
 
     if filtered_rows == 0:
         raise ValueError(
-            "Zero rows remain after filtering for 1-3 star reviews. "
-            "The dataset may contain only high-rating reviews."
+            "Zero rows remain. The dataset either contained only high-rating reviews, "
+            "or the negative reviews had no written text."
         )
 
     # ── Step 5: Hard cap ─────────────────────────────────────────

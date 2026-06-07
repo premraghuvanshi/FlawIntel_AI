@@ -112,7 +112,7 @@ def _zone2_diagnostic_metrics(r: dict) -> None:
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Unique Flaw Categories Found", r["optimal_k"])
-    c2.metric("Clustering Accuracy", f"{accuracy_pct*10}%", help="How well the AI separated the different types of complaints.")
+    c2.metric("Clustering Accuracy", f"{ accuracy_pct}%", help="How well the AI separated the different types of complaints.")
     c3.metric("Pipeline Processing Speed", f"{latency}s")
     c4.metric("Reviews Processed", r["capped_rows"])
 
