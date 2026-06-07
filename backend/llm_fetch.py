@@ -52,6 +52,29 @@ _GROQ_MAX_TOKENS = 256
 _GROQ_TIMEOUT = 30              # seconds per request
 
 
+def _sanitize_llm_output(parsed: dict[str, Any], cluster_id: int) -> dict[str, Any]:
+    """Ensures all fields are populated and valid to prevent DB IntegrityErrors."""
+    
+    # 1. Ensure Feature_Mentioned is a valid string
+    if not parsed.get("Feature_Mentioned") or not isinstance(parsed.get("Feature_Mentioned"), str):
+        parsed["Feature_Mentioned"] = "General Quality"
+        
+    # 2. Ensure Specific_Complaint is a valid string
+    if not parsed.get("Specific_Complaint") or not isinstance(parsed.get("Specific_Complaint"), str):
+        parsed["Specific_Complaint"] = "No specific complaint captured."
+        
+    # 3. Defensive Sentiment Parsing
+    raw_score = parsed.get("Sentiment_Score")
+    try:
+        parsed["Sentiment_Score"] = max(-1.0, min(0.0, float(raw_score)))
+    except (ValueError, TypeError):
+        parsed["Sentiment_Score"] = -0.5
+        
+    parsed["cluster_id"] = cluster_id
+    return parsed
+
+
+
 # ─────────────────────────────────────────────────────────────────
 # Primary: Async Groq
 # ─────────────────────────────────────────────────────────────────
@@ -100,31 +123,17 @@ async def _call_groq_single(
     parsed = json.loads(raw_text)  # raises json.JSONDecodeError on bad output
 
     # Validate required keys
+    # Validate required keys
     required = {"Feature_Mentioned", "Sentiment_Score", "Specific_Complaint"}
-    missing = required - parsed.keys()
-    if missing:
-        raise ValueError(f"LLM response missing keys: {missing}")
+    if not required.issubset(parsed.keys()):
+        # Log it and provide default keys so sanitization can fill them in
+        print(f"[llm_fetch] LLM missing keys. Filling defaults.")
+        for key in required:
+            if key not in parsed:
+                parsed[key] = None
 
-    # Clamp sentiment to [-1, 0]
-    # ── Defensive Sentiment Parsing ────────────────────────────────
-    # Safely get the value
-    raw_score = parsed.get("Sentiment_Score")
-    
-    try:
-        # If it's None or the LLM returned "null", treat as invalid
-        if raw_score is None:
-            raise ValueError("Sentiment_Score is NoneType")
-            
-        # Convert to float and clamp between -1.0 and 0.0
-        parsed["Sentiment_Score"] = max(-1.0, min(0.0, float(raw_score)))
-        
-    except (ValueError, TypeError):
-        # Fallback: Assign a neutral-negative value so the pipeline doesn't crash
-        print(f"[llm_fetch] Warning: Sentiment_Score '{raw_score}' is invalid. Defaulting to -0.5.")
-        parsed["Sentiment_Score"] = -0.5
-
-    parsed["cluster_id"] = cluster_id
-    return parsed
+    # Sanitize data to prevent SQLite IntegrityErrors
+    return _sanitize_llm_output(parsed, cluster_id)
 
 
 async def _extract_all_clusters_async(
