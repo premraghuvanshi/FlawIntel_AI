@@ -107,6 +107,28 @@ def map_columns(df: pd.DataFrame) -> tuple[str | None, str | None, float, float]
         return None, None, 0.0, 0.0
 
 
+
+# ─────────────────────────────────────────────────────────────────
+# check column those are link or urls 
+# ─────────────────────────────────────────────────────────────────
+
+import re
+
+def _is_link_series(series: pd.Series) -> bool:
+    """
+    Return True if most non-null values in the Series look like URLs.
+    """
+    # Simple regex for http/https links
+    url_pattern = re.compile(r'^(https?://|www\.)', re.IGNORECASE)
+    non_null = series.dropna().astype(str)
+    if non_null.empty:
+        return False
+    # Count how many values match the URL pattern
+    link_count = non_null.str.match(url_pattern).sum()
+    # If >80% of non-null values are links, treat column as a link column
+    return link_count / len(non_null) > 0.8
+
+
 # ─────────────────────────────────────────────────────────────────
 # CSV ingestion
 # ─────────────────────────────────────────────────────────────────
@@ -188,6 +210,13 @@ def preprocess_pipeline(
     
     cols_after = set(df.columns)
     dropped_cols = cols_before - cols_after
+
+    # E. Drop columns that are mostly links (URLs)
+    link_cols = [col for col in df.columns if _is_link_series(df[col])]
+    if link_cols:
+       df = df.drop(columns=link_cols)
+       print(f"[pipeline] Dropped {len(link_cols)} link columns: {link_cols}")
+
     
     if dropped_cols:
         print(f"[pipeline] Dropped {len(dropped_cols)} useless columns: {dropped_cols}")
