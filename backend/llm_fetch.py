@@ -106,7 +106,23 @@ async def _call_groq_single(
         raise ValueError(f"LLM response missing keys: {missing}")
 
     # Clamp sentiment to [-1, 0]
-    parsed["Sentiment_Score"] = max(-1.0, min(0.0, float(parsed["Sentiment_Score"])))
+    # ── Defensive Sentiment Parsing ────────────────────────────────
+    # Safely get the value
+    raw_score = parsed.get("Sentiment_Score")
+    
+    try:
+        # If it's None or the LLM returned "null", treat as invalid
+        if raw_score is None:
+            raise ValueError("Sentiment_Score is NoneType")
+            
+        # Convert to float and clamp between -1.0 and 0.0
+        parsed["Sentiment_Score"] = max(-1.0, min(0.0, float(raw_score)))
+        
+    except (ValueError, TypeError):
+        # Fallback: Assign a neutral-negative value so the pipeline doesn't crash
+        print(f"[llm_fetch] Warning: Sentiment_Score '{raw_score}' is invalid. Defaulting to -0.5.")
+        parsed["Sentiment_Score"] = -0.5
+
     parsed["cluster_id"] = cluster_id
     return parsed
 
